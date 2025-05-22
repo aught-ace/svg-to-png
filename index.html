@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta content="width=device-width">
+        <title>SVG to PNG</title>
+	    <link href="./icon.svg" rel="icon">
+        <link href="./icon.png" rel="apple-touch-icon">
+	    <style>
+img
+{
+    object-fit: contain;
+    inline-size: 100%;
+    block-size: 100%;
+}
+
+canvas
+{
+    object-fit: contain;
+    inline-size: 100%;
+    block-size: 100%;
+    image-rendering: pixelated;
+}
+
+.screen
+{
+    inline-size: 100%;
+    block-size: calc((100svb - 15.5rem) / 2);
+    padding: 0;
+    margin-inline: auto;
+    line-height: 0;
+}
+
+input[type="file"]
+{
+    display: none;
+}
+
+label,
+input[type="button"]
+{
+    inline-size: 8rem;
+    block-size: 2rem;
+    background-color: light-dark(#000, #FFF);
+    color: light-dark(#FFF, #000);
+    text-align: center;
+    display: inline-block;
+    border-radius: 0.5em;
+    vertical-align: middle;
+}
+
+input[type="number"]
+{
+    border: solid 0.125em light-dark(#000, #FFF);
+    inline-size: 5rem;
+    text-align: right;
+    padding-inline: 0.25em;
+    border-radius: 0.5em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+div
+{
+    text-align: center;
+    padding-block: 0.5rem;
+}
+
+header
+{
+    inline-size: 100svi;
+    block-size: 2rem;
+    margin-block-start: 1rem;
+}
+
+main
+{
+    inline-size: 100svi;
+    block-size: calc(100svb - 6rem);
+}
+
+a {
+    background-color: #F99;
+    color: #600;
+    text-decoration: none;
+    border-radius: 0.25em;
+    padding-inline: 0.5em;
+    margin-inline: auto;
+    inline-size: fit-content;
+    display: block;
+}
+
+h1
+{
+    font-size: 2rem;
+    block-size: 2rem;
+    line-height: 2rem;
+    text-align: center;
+}
+
+.none
+{
+    display: none;
+}
+
+body
+{
+    background-color: light-dark(#FFF, #000);
+    color: light-dark(#000, #FFF);
+    width: 100svi;
+    height: 100svb;
+    overflow: hidden;
+}
+
+:root
+{
+    font-size: 2svb;
+    color-scheme: light dark;
+    width: 100svi;
+    height: 100svb;
+    overflow: hidden;
+}
+
+*
+{
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    border-style: none;
+    font-weight: normal;
+    font-family: sans-serif;
+    font-size: 1em;
+    line-height: 2em;
+    word-spacing: 0;
+    letter-spacing: 0;
+    box-sizing: border-box;
+    font-feature-settings: "hwid";
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    outline: none;
+}
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>SVG to PNG</h1>
+        </header>
+        <main>
+            <div class="screen">
+                <img id="svg" src="./icon.svg" alt="SVG">
+            </div>
+            <div>
+                <input id="file" type="file">
+                <label id="import" for="file">IMPORT SVG</label>
+            </div>
+            <div>
+                W:<input id="width" value="180" type="number">
+                H:<input id="height" value="180" type="number">
+            </div>
+            <div class="screen">
+                <canvas width="180" height="180"></canvas>
+            </div>
+            <div>
+                <input id="save" value="SAVE PNG" type="button">
+            </div>
+        </main>
+        <footer>
+            <div>
+                <a href="../">aughtAce</a>
+            </div>
+        </footer>
+
+        <script async>'use strict'
+
+const element =
+{
+    svg: document.querySelector('#svg'),
+    file: document.querySelector('#file'),
+    import: document.querySelector('#import'),
+    width: document.querySelector('#width'),
+    height: document.querySelector('#height'),
+    image: document.querySelector('img'),
+    canvas: document.querySelector('canvas'),
+    save: document.querySelector('#save'),
+}
+
+const drawer =
+{
+    context2d: element.canvas.getContext('2d'),
+}
+
+const object =
+{
+    svg: null,
+    name: 'svg',
+}
+
+const func =
+{
+    convert: () =>
+    {
+        const w = element.width.value
+        const h = element.height.value
+
+        element.canvas.width = w
+        element.canvas.height = h
+
+        drawer.context2d.clearRect(0, 0, w, h)
+	    drawer.context2d.drawImage(element.image, 0, 0, w, h)
+    },
+    init: () =>
+    {
+        drawer.context2d.clearRect(0, 0, element.canvas.width, element.canvas.height)
+    },
+}
+
+const callback =
+{
+    loaded: (e) =>
+    {
+        func.init()
+        func.convert()
+    },
+    file: (e) =>
+    {
+        const t = e.target.files[0]
+        if(t == null) return
+
+        const match = /\b(.+)\.svg$/.exec(t.name)
+        if(match == null) return
+        const fileName = match[0]
+        const name = match[1]
+
+        element.import.textContent = fileName
+        object.name = name
+
+        const url = window.URL.createObjectURL(t)
+        element.image.src = url
+    },
+    size: (e) =>
+    {
+        func.convert()
+    },
+    save: (e) =>
+    {
+        const pngUrl = element.canvas.toDataURL('image/png')
+
+        const a = document.createElement('a')
+        a.href = pngUrl
+        a.download = object.name + '.png'
+        a.click()
+    },
+}
+
+element.image.addEventListener('load', callback.loaded)
+element.file.addEventListener('change', callback.file)
+element.width.addEventListener('input', callback.size)
+element.height.addEventListener('input', callback.size)
+element.save.addEventListener('click', callback.save)
+
+        </script>
+    </body>
+</html>
